@@ -1,8 +1,8 @@
 // BEGIN-TODO(Name)
 // Please, before you do anything else, add your names here:
-// Group <Group number>
-// <Full name 1>: <Student number 1>
-// <Full name 2>: <Student number 2>
+// Group 69
+// Jazman Mohamad Ismail: 1923072
+// Arhan Chhabra: 1940198
 //
 // Show us what you're made of!
 //
@@ -20,7 +20,20 @@ ghost function pow(x: nat, n: nat): nat
 method FastExp(X: nat, N: nat) returns (y: nat)
   ensures y == pow(X, N)
 // BEGIN-TODO(FastExp)
-// Give a verifying implementation of log-time exponentiation that follows the
-// specification given in `pow`.
+{
+  var a := X;
+  var n := N;
+  y := 1;
+  while (n > 0)
+    invariant y * pow(a, n) == pow(X, N)
+    decreases n;
+  {
+    if (n % 2 == 1) {
+      y := y * a;
+    }
+    a := a * a;
+    n := n / 2;
+  }
+}
 // END-TODO(FastExp)
 

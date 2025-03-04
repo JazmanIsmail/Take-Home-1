@@ -1,8 +1,8 @@
 // BEGIN-TODO(Name)
 // Please, before you do anything else, add your names here:
-// Group <Group number>
-// <Full name 1>: <Student number 1>
-// <Full name 2>: <Student number 2>
+// Group 69
+// Jazman Mohamad Ismail: 1923072
+// Arhan Chhabra: 1940198
 //
 // Show us what you're made of!
 //
@@ -30,30 +30,59 @@ function pow(x: int, n: nat) : int
 
 
 // BEGIN-TODO(Optional)
-// Optionally add your lemmas and helper functions here.
+
 // END-TODO(Optional)
 
 
 method polySimple(a: seq<int>, x: int) returns (r: int)
     ensures r == polyval(a, x)
 // BEGIN-TODO(NaivePoly)
-// Implement a method that calculates the value of a polynomial in accordance
-// with the specification in `polyval`. The runtime of this method may be
-// quadratic in the degree of the polynomial.
+{
+    r := 0;
+    var i := 0;
+    while i < |a|
+        invariant 0 <= i <= |a|
+        invariant r == polyval(a[..i], x)
+    {
+        r := r + a[i] * pow(x, i);
+        i := i + 1;
+    }
+}
 // END-TODO(NaivePoly)
 
 
 method polyPowerCache(a: seq<int>, x: int) returns (r: int)
     ensures r == polyval(a, x)
 // BEGIN-TODO(CachePoly)
-// Implement a method that calculates the value of a polynomial in accordance
-// with the specification in `polyval`. The runtime of this method must be
-// linear in the degree of the polynomial.
+{
+  r := 0;
+  var power_x := 1;
+  var i := 0;
+  while i < |a|
+    invariant 0 <= i <= |a|
+    invariant power_x == pow(x, i)
+    invariant r == polyval(a[..i], x)
+  {
+    r := r + a[i] * power_x;
+    power_x := power_x * x;
+    i := i + 1;
+  }
+}
 // END-TODO(CachePoly)
 
 
 method Horner(a: seq<int>, x: int) returns (r: int)
     ensures r == polyval(a, x)
 // BEGIN-TODO(HornerPoly)
-// Implement Horner's scheme for calculating the value of a polynomial.
+{
+    r := 0;
+    var i := |a| - 1;
+    while i >= 0
+        invariant -1 <= i < |a|
+        invariant r == polyval(a[i+1..], x)
+    {
+        r := a[i] + x * r;
+        i := i - 1;
+    }
+}
 // END-TODO(HornerPoly)
