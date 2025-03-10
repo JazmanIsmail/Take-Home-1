@@ -31,6 +31,13 @@ function pow(x: int, n: nat) : int
 
 // BEGIN-TODO(Optional)
 
+// RE-EXAMINE
+lemma PolyvalPrefix(a: seq<int>, x: int, i: nat)
+  requires i < |a|
+  ensures polyval(a[..i+1], x) == polyval(a[..i], x) + a[i] * pow(x, i)
+
+lemma PowerTrue(x: int, i: nat)
+    ensures pow(x, i+1) == pow(x, i) * x 
 // END-TODO(Optional)
 
 
@@ -43,7 +50,11 @@ method polySimple(a: seq<int>, x: int) returns (r: int)
     while i < |a|
         invariant 0 <= i <= |a|
         invariant r == polyval(a[..i], x)
+        invariant a[..|a|] == a
     {
+        // RE-EXAMINE
+        // assert a[..i+1] == a[..i] + [a[i]];
+        PolyvalPrefix(a, x, i);
         r := r + a[i] * pow(x, i);
         i := i + 1;
     }
@@ -62,8 +73,14 @@ method polyPowerCache(a: seq<int>, x: int) returns (r: int)
     invariant 0 <= i <= |a|
     invariant power_x == pow(x, i)
     invariant r == polyval(a[..i], x)
+    invariant a[..|a|] == a
   {
+    // RE-EXAMINE
+    // assert r + a[i] * power_x == polyval(a[..i+1], x);
+    PolyvalPrefix(a, x, i);
     r := r + a[i] * power_x;
+    // PowerTrue(power_x,i);
+    // assert power_x == pow(x, i);
     power_x := power_x * x;
     i := i + 1;
   }
