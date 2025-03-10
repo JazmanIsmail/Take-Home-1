@@ -15,6 +15,22 @@ ghost function pow(x: nat, n: nat): nat
 
 // BEGIN-TODO(Optional)
 // Optionally add your lemmas and helper functions here.
+
+// ghost function Exp(b: nat, n: nat): nat {
+//   if n == 0 then 1 else b * Exp(b, n-1)
+// }
+
+// method computeExp(b: nat, n: nat): nat {
+
+// }
+
+// Do I need to prove this further though?
+// And are these lemmas good enough (just copied from book and replaced exp with pow)
+lemma {:induction false} ExpAddExponent(b: nat, m: nat, n: nat)
+  ensures pow(b, m + n) == pow(b, m) * pow(b, n)
+lemma {:induction false} ExpSquareBase(b: nat, n: nat)
+  ensures pow(b * b, n) == pow(b, 2 * n)
+
 // END-TODO(Optional)
 
 method FastExp(X: nat, N: nat) returns (y: nat)
@@ -26,13 +42,18 @@ method FastExp(X: nat, N: nat) returns (y: nat)
   y := 1;
   while (n > 0)
     invariant y * pow(a, n) == pow(X, N)
-    decreases n;
+    // invariant 1 <= y <= N
+    decreases n
   {
+    // fact about div and mod, for any integer k: k == 2 * (k / 2) + k % 2
     if (n % 2 == 1) {
       y := y * a;
+      n := n - 1;
+    } else {
+      ExpSquareBase(a, n / 2);
+      a := a * a;
+      n := n / 2;
     }
-    a := a * a;
-    n := n / 2;
   }
 }
 // END-TODO(FastExp)
