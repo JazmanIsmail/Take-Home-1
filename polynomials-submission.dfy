@@ -38,6 +38,10 @@ lemma PolyvalPrefix(a: seq<int>, x: int, i: nat)
 
 lemma PowerTrue(x: int, i: nat)
     ensures pow(x, i+1) == pow(x, i) * x 
+
+lemma HornerHelp(a: seq<int>, x: int, i: nat)
+    requires i < |a|
+    ensures polyval(a[i..], x) == a[i] + x * polyval(a[i+1..], x)
 // END-TODO(Optional)
 
 
@@ -92,14 +96,20 @@ method Horner(a: seq<int>, x: int) returns (r: int)
     ensures r == polyval(a, x)
 // BEGIN-TODO(HornerPoly)
 {
+    // REVIEW THIS CODE BELOW
     r := 0;
     var i := |a| - 1;
     while i >= 0
         invariant -1 <= i < |a|
         invariant r == polyval(a[i+1..], x)
+        decreases i
     {
-        r := a[i] + x * r;
-        i := i - 1;
+        // r := a[i] + x * r;
+        HornerHelp(a, x, i);
+        if (i >= 0) {
+            r := a[i] + x * r;
+            i := i - 1;
+        }
     }
 }
 // END-TODO(HornerPoly)
