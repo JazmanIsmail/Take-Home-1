@@ -16,20 +16,33 @@ ghost function pow(x: nat, n: nat): nat
 // BEGIN-TODO(Optional)
 // Optionally add your lemmas and helper functions here.
 
-// ghost function Exp(b: nat, n: nat): nat {
-//   if n == 0 then 1 else b * Exp(b, n-1)
-// }
-
-// method computeExp(b: nat, n: nat): nat {
-
-// }
-
-// Do I need to prove this further though?
-// And are these lemmas good enough (just copied from book and replaced exp with pow)
-lemma {:induction false} ExpAddExponent(b: nat, m: nat, n: nat)
-  ensures pow(b, m + n) == pow(b, m) * pow(b, n)
+// Adapt one of the lemmas from textbook
 lemma {:induction false} ExpSquareBase(b: nat, n: nat)
   ensures pow(b * b, n) == pow(b, 2 * n)
+  {
+    if n == 0 { // Base case
+      calc {
+      pow(b * b, 0); // Def.
+      ==
+      1;
+      ==
+      pow(b, 0); // Re-apply def.
+      ==
+      pow(b, 2 * 0); // Re-write prev. expression
+    }
+  } else { // Step case
+    ExpSquareBase(b, n - 1); // Apply IH
+    calc {
+      pow(b * b, n);
+      ==
+      (b * b) * pow(b * b, n - 1); // Apply def.
+      ==
+      (b * b) * pow(b, 2 * (n - 1)); // Equiv.
+      == 
+      pow(b, 2 * n); // Re-write equiv.
+    }
+  }
+  }
 
 // END-TODO(Optional)
 
@@ -50,7 +63,7 @@ method FastExp(X: nat, N: nat) returns (y: nat)
       y := y * a;
       n := n - 1;
     } else {
-      ExpSquareBase(a, n / 2);
+      ExpSquareBase(a, n/2);
       a := a * a;
       n := n / 2;
     }

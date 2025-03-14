@@ -31,17 +31,96 @@ function pow(x: int, n: nat) : int
 
 // BEGIN-TODO(Optional)
 
-// RE-EXAMINE
 lemma PolyvalPrefix(a: seq<int>, x: int, i: nat)
   requires i < |a|
   ensures polyval(a[..i+1], x) == polyval(a[..i], x) + a[i] * pow(x, i)
+  {
+    if (i == 0) { // Base case
+        calc {
+            polyval(a[..0+1], x);
+            ==
+            polyval(a[..1], x);
+            == // apply def. of polyval
+            polyval(a[..1][..0], x) + a[..1][0] * pow(x, 0);
+            == 
+            0 + a[0] * pow(x, 0);
+            == // pow(x,0) == 1 as established
+            0 + a[0] * 1;
+            ==
+            a[0];
+        }
+    } else { // Step case
+        // Asserting explicit slicing rule to help dafny verify the below calculations
+        assert a[..i+1] == a[..i] + [a[i]];
+        calc {
+            polyval(a[..i+1], x);
+            == // Use def.
+            polyval(a[..i+1][..i], x) + a[..i+1][i] * pow(x, i);
+            == // Simplfy
+            polyval(a[..i], x) + a[i] * pow(x, i);
+        }
+    }
+}
 
 lemma PowerTrue(x: int, i: nat)
     ensures pow(x, i+1) == pow(x, i) * x 
+    {
+        if (i == 0) { // Base case
+            assert pow(x,0) == 1;
+        } else {
+            calc {
+                pow(x,i+1);
+                == // Def. of pow
+                x * pow(x, (i+1) - 1);
+                == // Simplification and thus result
+                x * pow(x, i);
+            }
+        }
+    }
+// Define an additional Horner lemma to help with Dafny verification
+lemma HornerAdditionalHelp(b: seq<int>, x: int)
+  requires |b| > 0
+  ensures polyval(b, x) == b[0] + if |b| == 1 then 0 else x * polyval(b[1..], x)
+{
+  if |b| == 1 { // Base case
+    calc { // Applying definition of polyval and further simplicification
+      polyval(b, x);
+      ==
+      polyval(b[..0], x) + b[0] * pow(x, 0);
+      == 
+      0 + b[0] * 1;
+      == 
+      b[0];
+    }
+  } else { // Step case
+    var n := |b|;
+    calc {
+      polyval(b, x);
+      == 
+      polyval(b[..n-1], x) + b[n-1] * pow(x, n-1); // Apply def.
+      ==
+      b[0] + x * polyval(b[1..n-1], x) + b[n-1] * pow(x, n-1); // Expand
+    }
+    // Asserts to Dafny about rules of slicing sequences and the two ways are equivalent
+    // Dafny cannot verify without this assertion
+    assert b[1..][..n-2] == b[1..n-1];
+    calc {
+      b[0] + x * (polyval(b[1..n-1], x) + b[n-1] * pow(x, n-2)); // Simplify
+      ==
+      b[0] + x * polyval(b[1..], x);
+    }
+  }
+}
+
 
 lemma HornerHelp(a: seq<int>, x: int, i: nat)
     requires i < |a|
     ensures polyval(a[i..], x) == a[i] + x * polyval(a[i+1..], x)
+{
+  var b := a[i..];
+  // Uses the additional Horner lemma to prove HornerHelp
+  HornerAdditionalHelp(b, x);
+}
 // END-TODO(Optional)
 
 
@@ -56,7 +135,6 @@ method polySimple(a: seq<int>, x: int) returns (r: int)
         invariant r == polyval(a[..i], x)
         invariant a[..|a|] == a
     {
-        // RE-EXAMINE
         // assert a[..i+1] == a[..i] + [a[i]];
         PolyvalPrefix(a, x, i);
         r := r + a[i] * pow(x, i);
@@ -79,12 +157,8 @@ method polyPowerCache(a: seq<int>, x: int) returns (r: int)
     invariant r == polyval(a[..i], x)
     invariant a[..|a|] == a
   {
-    // RE-EXAMINE
-    // assert r + a[i] * power_x == polyval(a[..i+1], x);
     PolyvalPrefix(a, x, i);
     r := r + a[i] * power_x;
-    // PowerTrue(power_x,i);
-    // assert power_x == pow(x, i);
     power_x := power_x * x;
     i := i + 1;
   }
@@ -96,7 +170,6 @@ method Horner(a: seq<int>, x: int) returns (r: int)
     ensures r == polyval(a, x)
 // BEGIN-TODO(HornerPoly)
 {
-    // REVIEW THIS CODE BELOW
     r := 0;
     var i := |a| - 1;
     while i >= 0
@@ -104,7 +177,6 @@ method Horner(a: seq<int>, x: int) returns (r: int)
         invariant r == polyval(a[i+1..], x)
         decreases i
     {
-        // r := a[i] + x * r;
         HornerHelp(a, x, i);
         if (i >= 0) {
             r := a[i] + x * r;
